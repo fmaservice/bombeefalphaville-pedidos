@@ -50,6 +50,14 @@ h2{font-size:15px;font-family:system-ui,sans-serif;text-transform:uppercase;lett
 .op.on{background:var(--red);color:#fff;border-color:var(--red)}
 .soon{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;font-size:34px;color:var(--mute)}
 .soon span{font:600 12px system-ui,sans-serif}
+.ph{position:relative}
+.ph img{cursor:zoom-in}
+.ph .zm{position:absolute;right:6px;bottom:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.lb{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.96);display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.lb.on{display:flex}
+.lb img{max-width:100%;max-height:82vh;object-fit:contain;border-radius:10px;touch-action:pinch-zoom}
+.lb p{color:#fff;font:600 15px system-ui,sans-serif;text-align:center;margin:14px 8px 0}
+.lb button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:22px;line-height:1;cursor:pointer}
 .card{position:relative}
 .card.out .ph,.card.out .info{opacity:.45}
 .card.out .step{pointer-events:none}
@@ -68,6 +76,7 @@ h2{font-size:15px;font-family:system-ui,sans-serif;text-transform:uppercase;lett
 <main id="list"></main>
 <p class="note">Cortes vendidos por quilo; embalados (linguiças e acompanhamentos) por unidade. Nos cortes por peso, o valor final pode variar um pouco e é confirmado no atendimento.</p>
 
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Foto do produto"><button type="button" id="lbx" aria-label="Fechar">✕</button><img id="lbi" alt=""><p id="lbc"></p></div>
 <div class="bar">
   <div class="t">Total estimado<b id="total">R$ 0,00</b></div>
   <a id="wa" class="wa off" href="#" target="_blank" rel="noopener">Pedir no WhatsApp</a>
@@ -158,7 +167,7 @@ function render(){
   if(p.g!=last){var n=0;P.forEach(function(x){if(x.g==p.g&&Q[x.id])n++});h+='<button class="gh'+(OPEN[p.g]?' open':'')+'" onclick="tg(\''+p.g+'\')"><span>'+(EMO[p.g]?EMO[p.g]+' ':'')+p.g+(n?' <b>'+n+'</b>':'')+'</span><i>▾</i></button>';last=p.g}
   if(!OPEN[p.g])return;
   var q=Q[p.id]||0;
-  h+='<div class="card'+(q?" sel":"")+(p.out?" out":"")+'"><div class="ph">'+(IMG[p.img||p.id]?'<img alt="'+p.n+'" src="'+IMG[p.img||p.id]+'">':(p.nophoto?'<div class="soon">🍢<span>Foto em breve</span></div>':art(p.k,p.prem)))+'</div><div class="info"><b>'+p.n+'</b><span class="tag'+(p.prem?" p":"")+'">'+p.t+'</span><div class="price">'+brl(p.pr)+' <small>/ '+(p.unit?'un':'kg')+'</small></div>'+(p.min?'<div class=\"hint\">A partir de '+(p.min<1?Math.round(p.min*1000)+' g':String(p.min).replace('.',',')+' kg')+' · de '+Math.round(p.step*1000)+' em '+Math.round(p.step*1000)+' g</div>':'')+(p.opts?optsHtml(p):'')+'<div class="step"><button onclick="ch(\''+p.id+'\',-'+(p.step||(p.unit?1:0.5))+')" aria-label="Diminuir">−</button><span>'+(q?qt(p,q):(p.unit?"0 un":"0 kg"))+'</span><button class="plus" onclick="ch(\''+p.id+'\','+(p.step||(p.unit?1:0.5))+')" aria-label="Aumentar">+</button></div></div>'+(p.out?'<div class="strike"></div><div class="badge">ESGOTADO</div>':'')+'</div>';
+  h+='<div class="card'+(q?" sel":"")+(p.out?" out":"")+'"><div class="ph">'+(IMG[p.img||p.id]?'<img alt="'+p.n+'" src="'+IMG[p.img||p.id]+'"><span class="zm">\u{1F50D}</span>':(p.nophoto?'<div class="soon">🍢<span>Foto em breve</span></div>':art(p.k,p.prem)))+'</div><div class="info"><b>'+p.n+'</b><span class="tag'+(p.prem?" p":"")+'">'+p.t+'</span><div class="price">'+brl(p.pr)+' <small>/ '+(p.unit?'un':'kg')+'</small></div>'+(p.min?'<div class=\"hint\">A partir de '+(p.min<1?Math.round(p.min*1000)+' g':String(p.min).replace('.',',')+' kg')+' · de '+Math.round(p.step*1000)+' em '+Math.round(p.step*1000)+' g</div>':'')+(p.opts?optsHtml(p):'')+'<div class="step"><button onclick="ch(\''+p.id+'\',-'+(p.step||(p.unit?1:0.5))+')" aria-label="Diminuir">−</button><span>'+(q?qt(p,q):(p.unit?"0 un":"0 kg"))+'</span><button class="plus" onclick="ch(\''+p.id+'\','+(p.step||(p.unit?1:0.5))+')" aria-label="Aumentar">+</button></div></div>'+(p.out?'<div class="strike"></div><div class="badge">ESGOTADO</div>':'')+'</div>';
  });
  document.getElementById("list").innerHTML=h;
  var tot=0,lines=[];
@@ -172,6 +181,15 @@ function render(){
 }
 function ch(id,d){var pp=P.filter(function(x){return x.id==id})[0];if(pp&&pp.out)return;var c=Q[id]||0,n;if(pp&&pp.min){n=d>0?(c<pp.min?pp.min:c+d):(c<=pp.min?0:c+d)}else{n=c+d}Q[id]=Math.max(0,Math.min(20,Math.round(n*10)/10));render()}
 render();
+(function(){
+ var lb=document.getElementById("lb"),li=document.getElementById("lbi"),lc=document.getElementById("lbc");
+ function open(src,alt){li.src=src;li.alt=alt||"";lc.textContent=alt||"";lb.className="lb on";try{document.body.style.overflow="hidden"}catch(e){}}
+ function close(){lb.className="lb";li.removeAttribute("src");try{document.body.style.overflow=""}catch(e){}}
+ document.getElementById("list").addEventListener("click",function(e){var t=e.target;if(t&&t.tagName=="IMG"&&t.parentNode&&t.parentNode.className.indexOf("ph")>-1)open(t.src,t.alt)});
+ lb.addEventListener("click",function(e){if(e.target!==li)close()});
+ document.getElementById("lbx").addEventListener("click",close);
+ document.addEventListener("keydown",function(e){if(e.key=="Escape")close()});
+})();
 </script>
 </body>
 </html>
